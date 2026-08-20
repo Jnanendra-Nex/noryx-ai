@@ -685,9 +685,15 @@ struct common_params {
     // retrieval params
     std::vector<std::string> context_files; // context files to embed
 
+    common_params_model qwen_model; // local Qwen model for answer generation
+
+    std::vector<std::string> external_context_files; // fallback context files to embed
+
     int32_t chunk_size = 64; // chunk size for context embedding
 
     std::string chunk_separator = "\n"; // chunk separator for context embedding
+
+    float retrieval_similarity_threshold = 0.60f; // minimum similarity to accept retrieved context
 
     // passkey params
     int32_t n_junk = 250; // number of times to repeat the junk text

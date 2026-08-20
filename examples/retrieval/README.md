@@ -8,14 +8,17 @@ https://github.com/ggml-org/llama.cpp/pull/6193
 ### How to use
 
 `retieval.cpp` has parameters of its own:
-- `--context-file`: file to be embedded - state this option multiple times to embed multiple files
+- `--context-file`: private file to be embedded - state this option multiple times to embed multiple files
+- `--qwen-model`: local Qwen GGUF model used to generate answers after retrieval
+- `--external-context-file`: fallback file to be embedded and checked only when private context is below `--retrieval-threshold`
+- `--retrieval-threshold`: minimum cosine similarity required before a retrieved context is accepted
 - `--chunk-size`: minimum size of each text chunk to be embedded
 - `--chunk-separator`: STRING to divide chunks by. newline by default
 
 `retrieval` example can be tested as follows:
 
 ```bash
-llama-retrieval --model ./models/bge-base-en-v1.5-f16.gguf --top-k 3 --context-file README.md --context-file License --chunk-size 100 --chunk-separator .
+llama-retrieval --model ./models/bge-base-en-v1.5-f16.gguf --qwen-model ./models/qwen.gguf --top-k 3 --retrieval-threshold 0.60 --context-file private.md --external-context-file fallback.md --chunk-size 100 --chunk-separator .
 ```
 
 This chunks and embeds all given files and starts a loop requesting query inputs:
@@ -24,7 +27,7 @@ This chunks and embeds all given files and starts a loop requesting query inputs
 Enter query:
 ```
 
-On each query input, top k chunks are shown along with file name, chunk position within file and original text:
+On each query input, private chunks are scored first. If the best private score is below the threshold, fallback chunks are scored. The selected context is formatted into the final prompt and sent to the local Qwen model; if neither source passes the threshold, the answer is `I don't know based on the available information.`
 
 ```
 Enter query: describe the mit license

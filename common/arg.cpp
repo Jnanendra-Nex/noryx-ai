@@ -2815,6 +2815,40 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
         }
     ).set_examples({LLAMA_EXAMPLE_RETRIEVAL}));
     add_opt(common_arg(
+        {"--qwen-model"}, "FNAME",
+        "local Qwen GGUF model used to generate answers after retrieval",
+        [](common_params & params, const std::string & value) {
+            std::ifstream file(value, std::ios::binary);
+            if (!file) {
+                throw std::runtime_error(string_format("error: failed to open file '%s'\n", value.c_str()));
+            }
+            params.qwen_model.path = value;
+        }
+    ).set_examples({LLAMA_EXAMPLE_RETRIEVAL}));
+    add_opt(common_arg(
+        {"--external-context-file"}, "FNAME",
+        "fallback context file to load if private context is below the similarity threshold (use comma-separated values to specify multiple files)",
+        [](common_params & params, const std::string & value) {
+            for (const auto & item : parse_csv_row(value)) {
+                std::ifstream file(item, std::ios::binary);
+                if (!file) {
+                    throw std::runtime_error(string_format("error: failed to open file '%s'\n", item.c_str()));
+                }
+                params.external_context_files.push_back(item);
+            }
+        }
+    ).set_examples({LLAMA_EXAMPLE_RETRIEVAL}));
+    add_opt(common_arg(
+        {"--retrieval-threshold"}, "N",
+        string_format("minimum similarity needed to use retrieved context (default: %.2f)", (double) params.retrieval_similarity_threshold),
+        [](common_params & params, const std::string & value) {
+            params.retrieval_similarity_threshold = std::stof(value);
+            if (params.retrieval_similarity_threshold < -1.0f || params.retrieval_similarity_threshold > 1.0f) {
+                throw std::runtime_error("error: retrieval threshold must be between -1.0 and 1.0\n");
+            }
+        }
+    ).set_examples({LLAMA_EXAMPLE_RETRIEVAL}));
+    add_opt(common_arg(
         {"--chunk-size"}, "N",
         string_format("minimum length of embedded text chunks (default: %d)", params.chunk_size),
         [](common_params & params, int value) {
